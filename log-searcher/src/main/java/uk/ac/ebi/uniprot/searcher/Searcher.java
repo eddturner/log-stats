@@ -1,9 +1,6 @@
 package uk.ac.ebi.uniprot.searcher;
 
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.URLDecoder;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
@@ -37,7 +34,14 @@ public class Searcher {
     private static final int ENTRY_COUNT_PER_DAY_THRESHOLD = 10;
     private static long hitCount = 0L;
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws UnsupportedEncodingException {
+//        String url = "http://example.com/test?q=%.P%20some%20other%20Text";
+//        url = url.replaceAll("%(?![0-9a-fA-F]{2})", "%25");
+//        System.out.println(url);
+//
+//        System.out.println(URLDecoder.decode("https%3A%2F%2Fmywebsite%2Fdocs%2Fenglish%2Fsite%2Fmybook.do" +
+//                                                     "%3Frequest_type%3D%26type%3Dprivate", "UTF-8"));
+
         // Searcher DATE_FROM DATE_TO PATTERN LOG_DIR COUNT_ONLY
         if (args.length != 5) {
             throw new IllegalArgumentException("Required usage parameters: DATE_FROM DATE_TO PATTERN LOG_DIR COUNT_ONLY");
@@ -74,7 +78,9 @@ public class Searcher {
     private static void printStats(boolean countOnly, long daysBetween) {
         log("Total hits:", "\t", Long.toString(hitCount));
         if (!countOnly) {
-            log("Top", Integer.toString(MAP_STATS_TO_SHOW), "IPs: (showing IPs requesting *on average* more than", Integer.toString(ENTRY_COUNT_PER_DAY_THRESHOLD), "times per day)");
+            log("Top", Integer
+                    .toString(MAP_STATS_TO_SHOW), "IPs: (showing IPs requesting *on average* more than", Integer
+                        .toString(ENTRY_COUNT_PER_DAY_THRESHOLD), "times per day)");
             IP_COUNT_MAP.entrySet().stream()
                     .filter(entry -> entry.getValue() > daysBetween * ENTRY_COUNT_PER_DAY_THRESHOLD)
                     .sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
@@ -110,7 +116,9 @@ public class Searcher {
              InputStreamReader reader = new InputStreamReader(input, decoder);
              BufferedReader br = new BufferedReader(reader)) {
             for (String line = null; (line = br.readLine()) != null; ) {
-                String decodedLine = URLDecoder.decode(line, "UTF-8");
+                String cleanedLine = line.replaceAll("%(?![0-9a-fA-F]{2})", "%25");
+                String decodedLine = URLDecoder.decode(cleanedLine, "UTF-8");
+
                 if (isValidLine(decodedLine)) {
                     Matcher regexMatcher = regex.matcher(decodedLine);
                     if (regexMatcher.find()) {
